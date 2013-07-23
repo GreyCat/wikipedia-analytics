@@ -16,6 +16,6 @@ This is a Wikipedia bot that updates web analytics statistics according to web a
 
 4. Do the changes:
 
-        ./02-process-pages --manual
+        ./02-process-pages
 
-Note the `--manual` switch that enables additional safety checks (i.e. manual diffing and approval of each edit).
+    By default, it automatically runs in manual mode with additional safety checks (i.e. manual diffing and approval of each edit). Use `--auto` to run in full auto mode, without approving every edit.

@@ -70,7 +70,7 @@ class Rewriter
 					File.open('page-after', 'w') { |f| f.write(dest) }
 					system("kdiff3 page-before page-after")
 				end
-				@wc.edit(t, dest, :summary => "Актуализирована посещаемость по данным #{tmpl}", :minor => true)
+				@wc.edit(t, dest, :summary => "Актуализирована посещаемость по данным #{tmpl}", :minor => 1)
 			else
 				warn "#{t} - not modified by #{processor.class.to_s}"
 			end
@@ -78,7 +78,7 @@ class Rewriter
 	end
 end
 
-$manual = true if ARGV[0] == '--manual'
+$manual = true if ARGV[0] != '--auto'
 
 rw = Rewriter.new
 #	'Шаблон:Посещаемость_по_данным_Compete',
