@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+# -*- coding: UTF-8 -*-
+
+require 'cgi'
+require 'json'
+
+$LOAD_PATH << '../get-analytics'
+
+require 'grabberutils'
+include GrabberUtils
+
+TEMPLATES = [
+	'Шаблон:Посещаемость_по_данным_LiveInternet',
+	'Шаблон:Посещаемость_по_данным_Openstat',
+]
+
+TEMPLATES.each { |t|
+	d = download("http://ru.wikipedia.org/w/api.php?action=query&list=embeddedin&eititle=#{CGI::escape(t)}&eilimit=100&format=json")
+	j = JSON.load(d)
+	File.open("lists/#{t}", 'w') { |f|
+		j['query']['embeddedin'].each { |x|
+			# Only process main namespace
+			next unless x['ns'] == 0
+			f.puts x['title']
+		}
+	}
+}
