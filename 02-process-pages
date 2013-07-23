@@ -1,0 +1,85 @@
+#!/usr/bin/env ruby
+# -*- coding: UTF-8 -*-
+
+require 'cgi'
+require 'json'
+
+$LOAD_PATH << '../get-analytics'
+
+require 'grabber/liveinternet'
+require 'grabber/openstat'
+
+require 'grabberutils'
+
+class WikipediaClient
+	include GrabberUtils
+
+	def get_source(t)
+		download("http://ru.wikipedia.org/w/index.php?title=#{t}&action=raw")
+	end
+
+	def put_source(t, src)
+		puts src
+	end
+end
+
+class Processor
+	COMMENT = '<!-- обновляется ежемесячно ботом -->'
+
+	def initialize(grabber, tmpl)
+		@grabber = grabber
+		@tmpl = tmpl
+	end
+
+	def process(src)
+		src.gsub(/\{\{\s*#{@tmpl}\s*\|\s*([^{}]+?)\s*\}\}/m) { |x|
+			id = $1
+			stat = @grabber.run_id(id)
+
+			# Check that we've got data we need
+			unless stat[:visitors_mon]
+				warn "#{@grabber.class.to_s} returned no data"
+				return src
+			end
+
+			"{{#{@tmpl}|#{id}|#{humanize(stat[:visitors_mon])} посетителей/месяц #{COMMENT}}}"
+		}
+	end
+
+	def humanize(number)
+		if number < 1_000
+			number.to_s
+		elsif number < 1_000_000
+			sprintf '%.1f тыс.', number.to_f / 1_000
+		elsif number < 1_000_000_000
+			sprintf '%.1f млн', number.to_f / 1_000_000
+		else
+			sprintf '%.1f млрд', number.to_f / 1_000_000_000
+		end
+	end
+end
+
+class Rewriter
+	def initialize
+		@wc = WikipediaClient.new
+	end
+
+	def run(processor, list)
+		File.open(list).each_line { |title|
+			title.chomp!
+			t = title.gsub(/ /, '_')
+			src = @wc.get_source(t)
+			dest = processor.process(src)
+
+			if src != dest
+				@wc.put_source(t, dest)
+			else
+				warn "#{t} - not modified by #{processor.class.to_s}"
+			end
+		}
+	end
+end
+
+rw = Rewriter.new
+rw.run(Processor.new(LiveInternet.new, 'посещаемость по данным LiveInternet'), "lists/Шаблон:Посещаемость_по_данным_LiveInternet")
+rw.run(Processor.new(Openstat.new, 'посещаемость по данным Openstat'), "lists/Шаблон:Посещаемость_по_данным_Openstat")
