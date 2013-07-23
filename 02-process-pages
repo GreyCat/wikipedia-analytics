@@ -81,5 +81,9 @@ end
 $manual = true if ARGV[0] == '--manual'
 
 rw = Rewriter.new
-rw.run(LiveInternet.new, 'посещаемость по данным LiveInternet', "lists/Шаблон:Посещаемость_по_данным_LiveInternet")
-rw.run(Openstat.new, 'посещаемость по данным Openstat', "lists/Шаблон:Посещаемость_по_данным_Openstat")
+#	'Шаблон:Посещаемость_по_данным_Compete',
+rw.run(Openstat.new, 'посещаемость по данным Openstat', 'lists/Шаблон:Посещаемость_по_данным_Openstat')
+rw.run(LiveInternet.new, 'посещаемость по данным LiveInternet', 'lists/Шаблон:Посещаемость_по_данным_LiveInternet')
+rw.run(MailRu.new, 'посещаемость по данным Mail.ru', 'lists/Шаблон:Посещаемость_по_данным_Mail.ru')
+rw.run(Rambler.new, 'посещаемость по данным Rambler', 'lists/Шаблон:Посещаемость_по_данным_Rambler')
+rw.run(Quantcast.new, 'посещаемость по данным Quantcast', 'lists/Шаблон:Посещаемость_по_данным_Quantcast')
