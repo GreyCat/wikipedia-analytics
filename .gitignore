@@ -2,3 +2,6 @@ cache
 lists
 wget.log
 cookies.txt
+config.rb
+page-before
+page-after
