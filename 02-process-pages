@@ -4,15 +4,22 @@
 require 'cgi'
 require 'json'
 
-$LOAD_PATH << '../get-analytics'
-$LOAD_PATH << File.dirname(__FILE__)
-
-require 'grabber/liveinternet'
-require 'grabber/openstat'
-
-require 'config'
-
+require 'web_analytics_discovery'
 require 'media_wiki'
+
+begin
+	require_relative 'config'
+rescue LoadError
+	$stderr.puts <<__EOF__
+You must create config file 'config.rb' with bot credentials to use this utility. Fill this template:
+
+BOT_LOGIN = ''
+BOT_PASSWORD = ''
+__EOF__
+	exit 1
+end
+
+include WebAnalyticsDiscovery
 
 class Processor
 	COMMENT = '<!-- обновляется ежемесячно ботом -->'
