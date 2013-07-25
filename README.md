@@ -5,6 +5,7 @@ This is a Wikipedia bot that updates web analytics statistics according to web a
 1. Install prerequisites:
     * Ruby
     * MediaWiki::Gateway gem (i.e. `gem install mediawiki-gateway`)
+    * web_analytics_discovery gem (i.e. `gem install web_analytics_discovery`)
 2. Write a config file:
 
         BOT_LOGIN = 'WebAnalyticsBot'
