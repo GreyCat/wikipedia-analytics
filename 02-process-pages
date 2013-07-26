@@ -27,6 +27,7 @@ OptionParser.new { |opts|
 	opts.banner = "Usage: #{__FILE__} [options]"
 
 	opts.on('-a', '--[no-]auto', 'Run in full auto, skip any confirmations') { |v| options[:auto] = v }
+	opts.on('-s', '--[no-]shuffle', 'Shuffle order of articles processed (it\'s alphabetical by default)') { |v| options[:shuffle] = v }
 	opts.on('-v', '--[no-]verbose', 'Verbose logging') { |v| options[:verbose] = v }
 
 	opts.on_tail('-h', '--help', 'Show this message') { puts opts; exit }

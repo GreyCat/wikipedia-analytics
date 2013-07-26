@@ -15,7 +15,9 @@ class Rewriter
 
 	def run(grabber, tmpl, list)
 		processor = Processor.new(grabber, tmpl)
-		File.open(list).each_line { |title|
+		list = File.open(list).readlines
+		list.shuffle! if @options[:shuffle]
+		list.each { |title|
 			title.chomp!
 			t = title.gsub(/ /, '_')
 			prefix = "#{grabber.class.to_s.gsub(/^.*::/, '')} - #{t} - "
