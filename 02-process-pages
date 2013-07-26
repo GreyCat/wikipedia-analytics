@@ -37,18 +37,21 @@ class Processor
 	def process(src)
 		found = false
 		dest = src.gsub(/\{\{\s*#{@tmpl}\s*\|\s*([^{}|]+?)\s*\}\}/m) { |x|
-			id = $1
-			stat = @grabber.run_id(id)
-
-			# Check that we've got data we need
-			raise NoDataFromGrabber.new unless stat[:visitors_mon]
-
-			"{{#{@tmpl}|#{id}|#{humanize(stat[:visitors_mon])} посетителей/месяц #{COMMENT}}}"
 			found = true
+			template_call_with_data($1)
 		}
 
 		raise NoTemplateFound.new unless found
 		return dest
+	end
+
+	def template_call_with_data(id)
+		stat = @grabber.run_id(id)
+
+		# Check that we've got data we need
+		raise NoDataFromGrabber.new unless stat[:visitors_mon]
+
+		"{{#{@tmpl}|#{id}|#{humanize(stat[:visitors_mon])} посетителей/месяц #{COMMENT}}}"
 	end
 
 	def humanize(number)
