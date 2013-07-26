@@ -36,7 +36,15 @@ class Processor
 
 	def process(src)
 		found = false
+
+		# No analytics data yet, we'll add data
 		dest = src.gsub(/\{\{\s*#{@tmpl}\s*\|\s*([^{}|]+?)\s*\}\}/m) { |x|
+			found = true
+			template_call_with_data($1)
+		}
+
+		# Old data with bot comment exists, we'll update the data
+		dest = src.gsub(/\{\{\s*#{@tmpl}\s*\|\s*([^{}|]+?)\|[^{}|]+ <!--[^{}|]+-->\s*\}\}/m) { |x|
 			found = true
 			template_call_with_data($1)
 		}
