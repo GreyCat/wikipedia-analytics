@@ -54,6 +54,6 @@ class Rewriter
 		File.open('page-after', 'w') { |f| f.write(dest) }
 		system("diff -u page-before page-after")
 		$stdout.print 'Confirm? (y/n) '
-		answer = $stdin.gets == 'y'
+		answer = $stdin.gets.chomp == 'y'
 	end
 end
