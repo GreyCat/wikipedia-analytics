@@ -38,7 +38,7 @@ class Rewriter
 			end
 
 			if src != dest
-				confirmed = @options[:auto] ? true : manual_confirmation(src, dest)
+				confirmed = @options[:auto] ? true : manual_confirmation(src, dest, title)
 				if confirmed
 					@wc.edit(t, dest, :summary => "[[Участник:WebAnalyticsBot|Web Analytics Bot]]: актуализирована #{tmpl}", :minor => 1)
 					@log.info "#{prefix}updated Wikipedia article"
@@ -51,7 +51,8 @@ class Rewriter
 		}
 	end
 
-	def manual_confirmation(src, dest)
+	def manual_confirmation(src, dest, title)
+		$stdout.print "\nARTICLE: #{title}\n\n"
 		File.open('page-before', 'w') { |f| f.write(src) }
 		File.open('page-after', 'w') { |f| f.write(dest) }
 		system("diff -u page-before page-after")
