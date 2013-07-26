@@ -4,8 +4,10 @@
 require 'cgi'
 require 'json'
 
+require 'optparse'
 require 'web_analytics_discovery'
 require 'media_wiki'
+require 'logger'
 
 begin
 	require_relative 'config'
@@ -58,9 +60,13 @@ class Processor
 end
 
 class Rewriter
-	def initialize
+	def initialize(options)
+		@options = options
 		@wc = MediaWiki::Gateway.new('http://ru.wikipedia.org/w/api.php')
 		@wc.login(BOT_LOGIN, BOT_PASSWORD)
+
+		@log = Logger.new($stdout)
+		@log.level = @options[:verbose] ? Logger::INFO : Logger::WARN
 	end
 
 	def run(grabber, tmpl, list)
@@ -68,26 +74,45 @@ class Rewriter
 		File.open(list).each_line { |title|
 			title.chomp!
 			t = title.gsub(/ /, '_')
+			@log.info "#{t} - processing"
 			src = @wc.get(t)
+			@log.info "#{t} - downloaded Wikipedia article"
 			dest = processor.process(src)
 
 			if src != dest
-				if $manual
-					File.open('page-before', 'w') { |f| f.write(src) }
-					File.open('page-after', 'w') { |f| f.write(dest) }
-					system("kdiff3 page-before page-after")
+				confirmed = @options[:auto] ? true : manual_confirmation(src, dest)
+				if confirmed
+					@wc.edit(t, dest, :summary => "Актуализирована #{tmpl}", :minor => 1)
+				else
+					@log.warn "#{t} - modification not confirmed"
 				end
-				@wc.edit(t, dest, :summary => "Актуализирована #{tmpl}", :minor => 1)
 			else
-				warn "#{t} - not modified by #{processor.class.to_s}"
+				@log.warn "#{t} - not modified by #{processor.class.to_s}"
 			end
 		}
 	end
+
+	def manual_confirmation(src, dest)
+		File.open('page-before', 'w') { |f| f.write(src) }
+		File.open('page-after', 'w') { |f| f.write(dest) }
+		system("diff -u page-before page-after")
+		print 'Confirm? (y/n) '
+		answer = gets
+	end
 end
 
-$manual = true if ARGV[0] != '--auto'
 
-rw = Rewriter.new
+options = {}
+OptionParser.new { |opts|
+	opts.banner = "Usage: #{__FILE__} [options]"
+
+	opts.on('-a', '--[no-]auto', 'Run in full auto, skip any confirmations') { |v| options[:auto] = v }
+	opts.on('-v', '--[no-]verbose', 'Verbose logging') { |v| options[:verbose] = v }
+
+	opts.on_tail('-h', '--help', 'Show this message') { puts opts; exit }
+}.parse!
+
+rw = Rewriter.new(options)
 #	'Шаблон:Посещаемость_по_данным_Compete',
 rw.run(Openstat.new, 'посещаемость по данным Openstat', 'lists/Шаблон:Посещаемость_по_данным_Openstat')
 rw.run(LiveInternet.new, 'посещаемость по данным LiveInternet', 'lists/Шаблон:Посещаемость_по_данным_LiveInternet')
