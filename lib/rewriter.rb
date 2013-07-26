@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+require 'media_wiki'
+require 'logger'
+
 class Rewriter
 	def initialize(options)
 		@options = options
@@ -50,7 +53,7 @@ class Rewriter
 		File.open('page-before', 'w') { |f| f.write(src) }
 		File.open('page-after', 'w') { |f| f.write(dest) }
 		system("diff -u page-before page-after")
-		print 'Confirm? (y/n) '
-		answer = gets
+		$stdout.print 'Confirm? (y/n) '
+		answer = $stdin.gets == 'y'
 	end
 end

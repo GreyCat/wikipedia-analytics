@@ -1,13 +1,10 @@
 #!/usr/bin/env ruby
 # -*- coding: utf-8 -*-
 
-require 'cgi'
-require 'json'
-
 require 'optparse'
+
 require 'web_analytics_discovery'
-require 'media_wiki'
-require 'logger'
+include WebAnalyticsDiscovery
 
 begin
 	require_relative 'config'
@@ -20,8 +17,6 @@ BOT_PASSWORD = ''
 __EOF__
 	exit 1
 end
-
-include WebAnalyticsDiscovery
 
 $LOAD_PATH << 'lib'
 require 'processor'
