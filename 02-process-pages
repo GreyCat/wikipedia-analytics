@@ -77,7 +77,7 @@ class Rewriter
 					File.open('page-after', 'w') { |f| f.write(dest) }
 					system("kdiff3 page-before page-after")
 				end
-				@wc.edit(t, dest, :summary => "Актуализирована посещаемость по данным #{tmpl}", :minor => 1)
+				@wc.edit(t, dest, :summary => "Актуализирована #{tmpl}", :minor => 1)
 			else
 				warn "#{t} - not modified by #{processor.class.to_s}"
 			end
