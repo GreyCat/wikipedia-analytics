@@ -1,0 +1,115 @@
+#!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
+
+require 'set'
+
+class Stats
+	def initialize
+		@stat = {}
+		@stat_service = {}
+		@problems = {}
+		@articles = {}
+	end
+
+	#I, [2013-07-30T09:38:24.920492 #10670]  INFO -- : MailRu - ЗнайКак - updated Wikipedia article
+	def parse_line(l)
+		return unless l =~ /^., \[(\d\d\d\d-\d\d-\d\d).*\].*? : (.*?) - (.*?) - (.*?)$/
+		@date, service, article, result = $1, $2, $3, $4
+
+		tag = nil
+		case result
+		when 'updated Wikipedia article'
+			tag = :updated
+		when 'processing'
+			tag = :total
+		when 'downloaded Wikipedia article'
+			# Ignore
+		when 'not modified'
+			tag = :nonmod
+		when 'got no data from external web analytics system', 'http download error'
+			tag = :nodata
+			@problems[service] = Set.new unless @problems[service]
+			@problems[service] << article
+		else
+			raise "Unknown result: #{result.inspect}"
+		end
+
+		inc(service, tag, article) if tag
+	end
+
+	TAG_PRIORITY = {
+		nil => -1,
+		:total => 0,
+		:nonmod => 8,
+		:nodata => 9,
+		:updated => 10,
+	}
+
+	def inc(service, tag, article)
+		@stat[tag] = (@stat[tag] || 0) + 1
+		@stat_service[service] = {} unless @stat_service[service]
+		@stat_service[service][tag] = (@stat_service[service][tag] || 0) + 1
+
+		old_priority = TAG_PRIORITY[@articles[article]]
+		new_priority = TAG_PRIORITY[tag]
+		@articles[article] = tag if new_priority > old_priority
+	end
+
+	def output(out)
+		out.puts <<__EOF__
+Web Analytics Bot: отчет о запуске #{@date}
+
+== Итого ==
+
+* Статей:
+** Всего обработано: #{@articles.length}
+** Успешно обновлено: #{@articles.find_all { |k, v| v == :updated }.length}
+** Не изменилось: #{@articles.find_all { |k, v| v == :nonmod }.length}
+** Ошибка получения данных: #{@articles.find_all { |k, v| v == :nodata }.length}
+
+* Счетчиков:
+** Всего обработано: #{@stat[:total]}
+** Успешно обновлено: #{@stat[:updated]}
+** Не изменилось: #{@stat[:nonmod]}
+** Ошибка получения данных: #{@stat[:nodata]}
+
+== По сервисам ==
+
+{|class="standard sortable"
+|-
+! Сервис
+! Всего
+! Обновлено
+! Не изменилось
+! Ошибка
+|-
+__EOF__
+		@stat_service.keys.sort.each { |s|
+			ss = @stat_service[s]
+			out.puts "| #{s} || #{ss[:total] || 0} || #{ss[:updated] || 0} || #{ss[:nonmod] || 0} || #{ss[:nodata] || 0}"
+			out.puts '|-'
+		}
+
+		out.puts <<__EOF__
+|}
+
+== Ошибка получения данных ==
+
+__EOF__
+		@problems.keys.sort.each { |s|
+			out.puts "=== #{s} ==="
+			out.puts
+			@problems[s].to_a.sort.each { |l| t = l.gsub(/_/, ' '); puts "* [[#{t}]]" }
+			out.puts
+		}
+	end
+end
+
+stat = Stats.new
+
+$stdin.each_line { |l|
+	l.chomp!
+	stat.parse_line(l)
+}
+
+stat.output($stdout)
