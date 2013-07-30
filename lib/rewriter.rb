@@ -9,7 +9,8 @@ class Rewriter
 		@wc = MediaWiki::Gateway.new('http://ru.wikipedia.org/w/api.php')
 		@wc.login(BOT_LOGIN, BOT_PASSWORD)
 
-		@log = Logger.new($stdout)
+#		@log = Logger.new($stdout)
+		@log = Logger.new('web_analytics_bot.log', 'daily')
 		@log.level = @options[:verbose] ? Logger::INFO : Logger::WARN
 	end
 
@@ -34,6 +35,9 @@ class Rewriter
 				next
 			rescue Processor::NoTemplateFound
 				@log.warn "#{prefix}unable to match & update template"
+				next
+			rescue GrabberUtils::DownloadError
+				@log.warn "#{prefix}http download error"
 				next
 			end
 
