@@ -26,6 +26,8 @@ class Stats
 			# Ignore
 		when 'not modified'
 			tag = :nonmod
+		when 'modification not confirmed'
+			tag = :noconfirm
 		when 'got no data from external web analytics system', 'http download error'
 			tag = :nodata
 			@problems[service] = Set.new unless @problems[service]
@@ -40,6 +42,7 @@ class Stats
 	TAG_PRIORITY = {
 		nil => -1,
 		:total => 0,
+		:noconfirm => 5,
 		:nonmod => 8,
 		:nodata => 9,
 		:updated => 10,
@@ -66,12 +69,14 @@ Web Analytics Bot: отчет о запуске #{@date}
 ** Успешно обновлено: #{@articles.find_all { |k, v| v == :updated }.length}
 ** Не изменилось: #{@articles.find_all { |k, v| v == :nonmod }.length}
 ** Ошибка получения данных: #{@articles.find_all { |k, v| v == :nodata }.length}
+** Ручной запрет правки: #{@articles.find_all { |k, v| v == :noconfirm }.length}
 
 * Счетчиков:
 ** Всего обработано: #{@stat[:total]}
 ** Успешно обновлено: #{@stat[:updated]}
 ** Не изменилось: #{@stat[:nonmod]}
 ** Ошибка получения данных: #{@stat[:nodata]}
+** Ручной запрет правки: #{@stat[:noconfirm]}
 
 == По сервисам ==
 
@@ -82,11 +87,12 @@ Web Analytics Bot: отчет о запуске #{@date}
 ! Обновлено
 ! Не изменилось
 ! Ошибка
+! Ручной запрет
 |-
 __EOF__
 		@stat_service.keys.sort.each { |s|
 			ss = @stat_service[s]
-			out.puts "| #{s} || #{ss[:total] || 0} || #{ss[:updated] || 0} || #{ss[:nonmod] || 0} || #{ss[:nodata] || 0}"
+			out.puts "| #{s} || #{ss[:total] || 0} || #{ss[:updated] || 0} || #{ss[:nonmod] || 0} || #{ss[:nodata] || 0} || #{ss[:noconfirm] || 0}"
 			out.puts '|-'
 		}
 
